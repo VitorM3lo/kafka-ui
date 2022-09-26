@@ -36,6 +36,8 @@
   "rules": {
     "react/no-unused-prop-types": "off",
     "react/require-default-props": "off",
+    "no-shadow": "off",
+    "@typescript-eslint/no-shadow": "off",
     "prettier/prettier": "warn",
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "jsx-a11y/label-has-associated-control": "off",

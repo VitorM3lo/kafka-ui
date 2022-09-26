@@ -1,11 +1,14 @@
-import React from 'react';
-import { TopicMessage } from 'generated-sources';
-import useDataSaver from 'lib/hooks/useDataSaver';
-import MessageToggleIcon from 'components/common/Icons/MessageToggleIcon';
-import IconButtonWrapper from 'components/common/Icons/IconButtonWrapper';
-import styled from 'styled-components';
 import { Dropdown, DropdownItem } from 'components/common/Dropdown';
+import IconButtonWrapper from 'components/common/Icons/IconButtonWrapper';
+import MessageToggleIcon from 'components/common/Icons/MessageToggleIcon';
+import { TopicMessage } from 'generated-sources';
 import { formatTimestamp } from 'lib/dateTimeHelpers';
+import { useSendMessage } from 'lib/hooks/api/topics';
+import useAppParams from 'lib/hooks/useAppParams';
+import useDataSaver from 'lib/hooks/useDataSaver';
+import React from 'react';
+import styled from 'styled-components';
+import { RouteParamsClusterTopic } from 'lib/paths';
 
 import MessageContent from './MessageContent/MessageContent';
 import * as S from './MessageContent/MessageContent.styled';
@@ -54,6 +57,35 @@ const Message: React.FC<Props> = ({
     savedMessage || ''
   );
 
+  const { clusterName, topicName } = useAppParams<RouteParamsClusterTopic>();
+
+  const sendMessage = useSendMessage({ clusterName, topicName });
+
+  const submit = async (data: {
+    key: string;
+    content: string;
+    headers: string;
+    partition: number;
+  }) => {
+    const { partition, key, content } = data;
+    JSON.parse(data.headers);
+    const headers = data.headers ? JSON.parse(data.headers) : undefined;
+    await sendMessage.mutateAsync({
+      key: !key ? null : key,
+      content: !content ? null : content,
+      headers,
+      partition: !partition ? 0 : partition,
+    });
+  };
+
+  const replayMessage = () =>
+    submit({
+      key: key!,
+      content: content!,
+      headers: JSON.stringify(headers),
+      partition,
+    });
+
   const toggleIsOpen = () => setIsOpen(!isOpen);
 
   const [vEllipsisOpen, setVEllipsisOpen] = React.useState(false);
@@ -88,6 +120,9 @@ const Message: React.FC<Props> = ({
                 Copy to clipboard
               </DropdownItem>
               <DropdownItem onClick={saveFile}>Save as a file</DropdownItem>
+              <DropdownItem onClick={replayMessage}>
+                Replay message
+              </DropdownItem>
             </Dropdown>
           )}
         </td>
